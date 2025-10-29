@@ -22,7 +22,7 @@ public class FunctionalInterfaceLesson {
             }
         };
 
-        MyCalculator calculator2 = (double a, double b) -> a + b;
+        MyCalculator calculator2 = (a, b) -> a + b;
 
         testCalculator(calculator, 10, 5);
         testCalculator(calculator2, 10, 5);
