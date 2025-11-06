@@ -210,18 +210,24 @@ public class StreamApiFinalProject {
         );
 
         // Задание 1
-        List<Product> productsListWithPriceUp100AndBookCategory = products.stream()
+        List<Product> productsListWithPriceUp100AndBookCategory = customers.stream()
+                .flatMap(customer -> customer.getOrders().stream())
+                .flatMap(order -> order.getProducts().stream())
                 .filter(p -> p.getCategory().equals("Books") && p.getPrice().intValue() > 100)
+                .distinct()
                 .collect(Collectors.toList());
 
         // Задание 2
-        List<Order> orderListWithProductsFromChildrenProductsCategory = orders.stream()
+        List<Order> orderListWithProductsFromChildrenProductsCategory = customers.stream()
+                .flatMap(customer -> customer.getOrders().stream())
                 .filter(order -> order.getProducts().stream()
                                 .anyMatch(product -> product.getCategory().equals("Children's products")))
                 .collect(Collectors.toList());
 
         // Задание 3
-        BigDecimal sumProductWithToysCategoryAndDiscount = products.stream()
+        BigDecimal sumProductWithToysCategoryAndDiscount = customers.stream()
+                .flatMap(customer -> customer.getOrders().stream())
+                .flatMap(order -> order.getProducts().stream())
                 .filter(product -> product.getCategory().equals("Toys"))
                 .map(product -> product.getPrice().multiply(new BigDecimal("0.9")))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -239,35 +245,42 @@ public class StreamApiFinalProject {
                 .collect(Collectors.toSet());
 
         // Задание 5
-        Product[] cheapProductsWithBooksCategoryTop = products.stream()
+        Product[] cheapProductsWithBooksCategoryTop = customers.stream()
+                .flatMap(customer -> customer.getOrders().stream())
+                .flatMap(order -> order.getProducts().stream())
                 .filter(product -> product.getCategory().equals("Books"))
+                .distinct()
                 .sorted(Comparator.comparing(Product::getPrice))
                 .limit(2)
                 .toArray(Product[]::new);
 
         // Задание 6
-        Order[] lastOrdersWithStatusDone = orders.stream()
+        Order[] lastOrdersWithStatusDone = customers.stream()
+                .flatMap(customer -> customer.getOrders().stream())
                 .filter(order -> order.getStatus().equals("DONE"))
                 .sorted(Comparator.comparing(Order::getDeliveryDate).reversed())
                 .limit(3)
                 .toArray(Order[]::new);
 
         // Задание 7
-        Set<Product> productListFromOrdersCreatedAtOfMarch = orders.stream()
+        Set<Product> productListFromOrdersCreatedAtOfMarch = customers.stream()
+                .flatMap(customer -> customer.getOrders().stream())
                 .filter(order -> order.getOrderDate().equals(LocalDate.of(2021, 3, 15)))
                 .peek(order -> System.out.print(order.getId() + " "))
                 .flatMap(order -> order.getProducts().stream())
                 .collect(Collectors.toSet());
 
         // Задание 8
-        long countOrdersDeliveryInFebruary21 = orders.stream()
+        long countOrdersDeliveryInFebruary21 = customers.stream()
+                .flatMap(customer -> customer.getOrders().stream())
                 .filter(order -> order.getDeliveryDate() != null
                         && order.getDeliveryDate().getMonth() == Month.FEBRUARY
                         && order.getDeliveryDate().getYear() == 2021)
                 .count();
 
         // Задание 9
-        var averagePriceOfMarchOrders = orders.stream()
+        var averagePriceOfMarchOrders = customers.stream()
+                .flatMap(customer -> customer.getOrders().stream())
                 .filter(order -> order.getDeliveryDate() != null
                         && order.getDeliveryDate().equals(LocalDate.of(2021, 3, 14)))
                 .map(Order::getProducts)
@@ -277,12 +290,16 @@ public class StreamApiFinalProject {
                         .intValue()));
 
         // Задание 10
-        var summaryStatisticProductWithCategoryBook = products.stream()
+        var summaryStatisticProductWithCategoryBook = customers.stream()
+                .flatMap(customer -> customer.getOrders().stream())
+                .flatMap(order -> order.getProducts().stream())
                 .filter(product -> product.getCategory().equals("Books"))
+                .distinct()
                 .collect(Collectors.summarizingInt(product -> product.getPrice().intValue()));
 
         // Задание 11
-        Map<Long, Integer> orderMap = orders.stream()
+        Map<Long, Integer> orderMap = customers.stream()
+                .flatMap(customer -> customer.getOrders().stream())
                 .collect(Collectors.toMap(Order::getId, order -> order.getProducts().size()));
 
         // Задание 12
@@ -290,12 +307,15 @@ public class StreamApiFinalProject {
                 .collect(Collectors.toMap(customer -> customer, customer -> new ArrayList<>(customer.getOrders())));
 
         // Задание 13
-        Map<Order, Double> ordersPriceMap = orders.stream()
+        Map<Order, Double> ordersPriceMap = customers.stream()
+                .flatMap(customer -> customer.getOrders().stream())
                 .collect(Collectors.toMap(order -> order, order -> order.getProducts().stream()
                         .mapToDouble(product -> product.getPrice().doubleValue()).sum()));
 
         // Задание 14
-        Map<String, List<String>> productByCategoryMap = products.stream()
+        Map<String, List<String>> productByCategoryMap = customers.stream()
+                .flatMap(customer -> customer.getOrders().stream())
+                .flatMap(order -> order.getProducts().stream())
                 .map(Product::getCategory)
                 .distinct()
                 .collect(Collectors.toMap(category -> category, category -> {
@@ -309,7 +329,9 @@ public class StreamApiFinalProject {
                 }));
 
         // Задание 15
-        Map<String, Product> expensiveProductByCategory = products.stream()
+        Map<String, Product> expensiveProductByCategory = customers.stream()
+                .flatMap(customer -> customer.getOrders().stream())
+                .flatMap(order -> order.getProducts().stream())
                 .map(Product::getCategory)
                 .distinct()
                 .collect(Collectors.toMap(category -> category, category -> {
