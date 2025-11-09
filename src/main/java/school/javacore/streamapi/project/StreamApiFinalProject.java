@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.*;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class StreamApiFinalProject {
@@ -233,32 +235,30 @@ public class StreamApiFinalProject {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // Задание 4
-        Set<Product> productsSetFromClientLevelTwoAndSpecialOrderDate = customers
-                .stream()
+        Set<Product> productsSetFromClientLevelTwoAndSpecialOrderDate = customers.stream()
                 .filter(customer -> customer.getLevel() == 2L)
                 .flatMap(customer -> customer.getOrders().stream())
                 .filter(order -> order.getOrderDate().getYear() == 2021
-                        && (order.getOrderDate().getMonth() == Month.FEBRUARY
+                        && ((order.getOrderDate().getMonth() == Month.FEBRUARY
                         && order.getOrderDate().getDayOfMonth() != 1)
-                        || order.getOrderDate().getMonth() == Month.MARCH)
+                        || order.getOrderDate().getMonth() == Month.MARCH))
                 .flatMap(order -> order.getProducts().stream())
                 .collect(Collectors.toSet());
 
         // Задание 5
-        Product[] cheapProductsWithBooksCategoryTop = customers.stream()
+        List<Product> cheapProductsWithBooksCategoryTop = customers.stream()
                 .flatMap(customer -> customer.getOrders().stream())
                 .flatMap(order -> order.getProducts().stream())
                 .filter(product -> product.getCategory().equals("Books"))
                 .distinct()
                 .sorted(Comparator.comparing(Product::getPrice))
                 .limit(2)
-                .toArray(Product[]::new);
+                .collect(Collectors.toList());
 
         // Задание 6
-        Order[] lastOrdersWithStatusDone = customers.stream()
+        Order[] lastOrdersCreated = customers.stream()
                 .flatMap(customer -> customer.getOrders().stream())
-                .filter(order -> order.getStatus().equals("DONE"))
-                .sorted(Comparator.comparing(Order::getDeliveryDate).reversed())
+                .sorted(Comparator.comparing(Order::getOrderDate).reversed())
                 .limit(3)
                 .toArray(Order[]::new);
 
@@ -271,23 +271,23 @@ public class StreamApiFinalProject {
                 .collect(Collectors.toSet());
 
         // Задание 8
-        long countOrdersDeliveryInFebruary21 = customers.stream()
+        BigDecimal countOrdersDeliveryInFebruary21 = customers.stream()
                 .flatMap(customer -> customer.getOrders().stream())
-                .filter(order -> order.getDeliveryDate() != null
-                        && order.getDeliveryDate().getMonth() == Month.FEBRUARY
-                        && order.getDeliveryDate().getYear() == 2021)
-                .count();
+                .filter(order -> order.getOrderDate().getMonth() == Month.FEBRUARY
+                        && order.getOrderDate().getYear() == 2021)
+                .map(order -> order.getProducts().stream()
+                        .map(Product::getPrice)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // Задание 9
         var averagePriceOfMarchOrders = customers.stream()
                 .flatMap(customer -> customer.getOrders().stream())
-                .filter(order -> order.getDeliveryDate() != null
-                        && order.getDeliveryDate().equals(LocalDate.of(2021, 3, 14)))
-                .map(Order::getProducts)
-                .collect(Collectors.averagingInt(product -> product.stream()
+                .filter(order -> order.getOrderDate().equals(LocalDate.of(2021, 3, 14)))
+                .map(order -> order.getProducts().stream()
                         .map(Product::getPrice)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add)
-                        .intValue()));
+                        .reduce(BigDecimal.ZERO, BigDecimal::add))
+                .collect(Collectors.averagingDouble(BigDecimal::doubleValue));
 
         // Задание 10
         var summaryStatisticProductWithCategoryBook = customers.stream()
@@ -316,36 +316,20 @@ public class StreamApiFinalProject {
         Map<String, List<String>> productByCategoryMap = customers.stream()
                 .flatMap(customer -> customer.getOrders().stream())
                 .flatMap(order -> order.getProducts().stream())
-                .map(Product::getCategory)
                 .distinct()
-                .collect(Collectors.toMap(category -> category, category -> {
-                    List<String> list = new ArrayList<>();
-                    for (Product p : products) {
-                        if (p.getCategory().equals(category)) {
-                            list.add(p.getName());
-                        }
-                    }
-                    return list;
-                }));
+                .collect(Collectors.groupingBy(
+                        Product::getCategory, Collectors.mapping(Product::getName, Collectors.toList()))
+                );
 
         // Задание 15
         Map<String, Product> expensiveProductByCategory = customers.stream()
                 .flatMap(customer -> customer.getOrders().stream())
                 .flatMap(order -> order.getProducts().stream())
-                .map(Product::getCategory)
                 .distinct()
-                .collect(Collectors.toMap(category -> category, category -> {
-                    Product expP = null;
-                    for (Product p : products) {
-                        if (p.getCategory().equals(category)) {
-                            if (expP == null) {
-                                expP = p;
-                            } else if (p.getPrice().doubleValue() > expP.getPrice().doubleValue()) {
-                                expP = p;
-                            }
-                        }
-                    }
-                    return expP;
-                }));
+                .collect(Collectors.toMap(
+                        Product::getCategory,
+                        Function.identity(),
+                        BinaryOperator.maxBy(Comparator.comparing(Product::getPrice))
+                ));
     }
 }
