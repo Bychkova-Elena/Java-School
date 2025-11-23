@@ -5,7 +5,7 @@ import school.javacore.multythreading.syncProject.siteVisitCounter.SiteVisitCoun
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class AtomicIntegerCounter implements SiteVisitCounter {
-    private static AtomicInteger atomicInteger = new AtomicInteger(0);
+    private static final AtomicInteger atomicInteger = new AtomicInteger(0);
 
     @Override
     public void incrementVisitCount() {

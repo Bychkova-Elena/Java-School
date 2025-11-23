@@ -7,7 +7,7 @@ import java.util.List;
 
 public class MultithreadingSiteVisitor {
     private final SiteVisitCounter siteVisitCounter;
-    private List<Thread> threads = new ArrayList<>();
+    private final List<Thread> threads = new ArrayList<>();
     private long startTime, endTime;
 
     public MultithreadingSiteVisitor(SiteVisitCounter siteVisitCounter) {
