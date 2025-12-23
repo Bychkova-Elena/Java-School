@@ -34,8 +34,8 @@ CREATE TABLE IF NOT EXISTS readers (
 
 CREATE TABLE IF NOT EXISTS loans (
     loan_id SERIAL PRIMARY KEY,
-    book_id SERIAL REFERENCES books(book_id),
-    reader_id SERIAL REFERENCES readers(reader_id),
+    book_id SERIAL REFERENCES books(book_id) ON DELETE CASCADE,
+    reader_id SERIAL REFERENCES readers(reader_id) ON DELETE CASCADE,
     loan_date DATE NOT NULL DEFAULT CURRENT_DATE,
     due_date DATE NOT NULL DEFAULT CURRENT_DATE + INTERVAL '1 month',
     return_date DATE DEFAULT NULL
